@@ -1,0 +1,138 @@
+### Setup and Data
+
+```{r}
+
+data.url <- "https://raw.githubusercontent.com/hectorlca/Violations-Dashboard/master/merged.csv"
+data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
+merged <- read.csv (textConnection(data.raw))
+
+data.url <- "https://raw.githubusercontent.com/hectorlca/Violations-Dashboard/master/parcels.csv"
+data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
+parcels <- read.csv (textConnection(data.raw))
+
+require (RCurl)
+library(shiny)
+library(DT)
+library (dplyr)
+library (leaflet)
+
+```
+
+### Data Table Explorer
+
+```{r}
+
+keeps <- c("Complaint.Type", "Violation.Date", "Comply.By.Date", "Violation.Status", "Complaint.Status", "Owner", "Nhood", "LandUse", "Address")
+
+dash.table <- merged[keeps]
+
+my.server <- (function(input, output) {
+  
+  
+  output$table <- DT::renderDataTable(DT::datatable({
+    data <- dash.table
+    if (input$status != "All") {
+      data <- data[data$Violation.Status == input$status,]
+    }
+    if (input$use != "All") {
+      data <- data[data$LandUse == input$use,]
+    }
+    
+    if (input$complaint != "All") {
+      data <- data[data$Complaint.Status == input$complaint,]
+    }
+    data
+  }))
+  
+})
+
+
+############################################
+###### HTML Specs for Checkbox Widgets #####
+###########################################
+
+tweaks <- 
+  list(tags$head(tags$style(HTML("
+                                 .multicol { 
+                                 height: 280px; width: 400px;
+                                 -webkit-column-count: 2; /* Chrome, Safari, Opera */ 
+                                 -moz-column-count: 2;    /* Firefox */ 
+                                 column-count: 2; 
+                                 -moz-column-fill: auto;
+                                 -column-fill: auto;
+                                 } 
+                                 ")) 
+  ))
+
+###########################
+### Widgets as Variables###
+###########################
+
+use.boxes <-
+  list(h3("Select property type"), 
+       tags$div(align = 'left', 
+                class = 'multicol', 
+                checkboxGroupInput(inputId  = 'use', 
+                                   label    = NULL, 
+                                   choices  = c("All", unique(as.character(merged$LandUse))),
+                                   selected = "All",
+                                   inline   = FALSE))) 
+
+status.boxes <-
+  list(h3("Choose Complaint Status"), 
+       tags$div(align = 'left', 
+                class = 'multicol', 
+                checkboxGroupInput(inputId  = 'complaint', 
+                                   label    = NULL, 
+                                   choices  = c("All", unique(as.character(merged$Complaint.Status))),
+                                   selected = "All",
+                                   inline   = FALSE)))
+
+dropdown <- 
+  list(h3("Choose Violation Status"), 
+       tags$div(align = 'left', 
+                class = 'dropdown',
+                selectInput("status", 
+                            "", 
+                            c("All",unique(as.character(merged$Violation.Status))))))
+
+
+
+################################################################
+################################################################
+
+
+my.ui <- navbarPage("Most Wanted Dashboard",
+                             tabPanel("Most Wanted Owners"),
+                             tabPanel("Most Wanted Properties"),
+                             tabPanel("Searchable",tweaks,
+                                      titlePanel("Most Wanted List"),
+                                      fluidRow(
+                                        
+                                        #### The Three Widgets ####   
+                                        column(3,
+                                               
+                                               dropdown,
+                                               
+                                               use.boxes,
+                                               
+                                               status.boxes),
+                                        
+                                        
+                                        #### The Table ####
+                                        
+                                        column(3,
+                                               
+                                               
+                                               mainPanel(
+                                                 DT::dataTableOutput("table"),
+                                                 align = "center",
+                                                 width = 12
+                                               )
+                                               
+                                               
+                                               
+                                               
+                                        ))))
+shinyApp( ui = my.ui, server = my.server )
+```
