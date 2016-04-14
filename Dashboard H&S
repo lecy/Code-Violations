@@ -2,11 +2,11 @@
 
 ```{r}
 
-data.url <- "https://raw.githubusercontent.com/hectorlca/Violations-Dashboard/master/merged.csv"
+data.url <- "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/data/merged.csv"
 data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
 merged <- read.csv (textConnection(data.raw))
 
-data.url <- "https://raw.githubusercontent.com/hectorlca/Violations-Dashboard/master/parcels.csv"
+data.url <- "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/data/parcels.csv"
 data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
 parcels <- read.csv (textConnection(data.raw))
 
