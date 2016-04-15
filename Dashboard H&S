@@ -1,6 +1,12 @@
+
 ### Setup and Data
 
 ```{r}
+require (RCurl)
+library(shiny)
+library(DT)
+library (dplyr)
+library (leaflet)
 
 data.url <- "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/data/merged.csv"
 data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
@@ -10,11 +16,7 @@ data.url <- "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/
 data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
 parcels <- read.csv (textConnection(data.raw))
 
-require (RCurl)
-library(shiny)
-library(DT)
-library (dplyr)
-library (leaflet)
+
 
 ```
 
@@ -99,7 +101,7 @@ explorer <- select(merged, Complaint.Type, Violation.Date, Comply.By.Date,
 rm (acres.owned, by.owneropen, by.ownerp, by.ownerv, by.prop, 
     by.propen, dist.ownerop, dist.ownerp, dist.ownerv, dist.propen,
     only.open, prop.v, props, sqft.owned, total.value)            
-###      
+ 
 
 ```
 
@@ -144,7 +146,22 @@ my.server <- (function(input, output) {
     
   }))
   
+    output$mostmap <- renderLeaflet({
+    
+    # build base map on load
+    
+    syr.map <- leaflet(data=merged ) %>% 
+      addProviderTiles("CartoDB.Positron", tileOptions(minZoom=10, maxZoom=17))  %>%
+      setView(lng=-76.13, lat=43.03, zoom=13) %>%
+      setMaxBounds(lng1=-75, lat1=41, lng2=-77,  lat2=45)
+    
+    
+    syr.map <- addCircleMarkers( syr.map, lng = merged$lon, lat = merged$lat, col="orange", popup = most.wanted )
+    
+  })
+  
 })
+
  
   
 
@@ -223,23 +240,18 @@ my.ui <- navbarPage("Most Wanted Dashboard",
                              tabPanel("Owner and Property Profiles",
                                       titlePanel("Summary Tables for Owners and Properties"),
                                       fluidRow(
-                                        
                                         column (3,
-                                                
                                                 summary.drop),
-                                                
                                         column (6,
                                                 
                                                 mainPanel(
                                                  DT::dataTableOutput("summaries"),
                                                  align = "center",
                                                  width = 12
-                                                
                                                           )
                                       
                                                 )
                                             )
-                                      
                                       ),
                              
                              tabPanel("Searchable",tweaks,
@@ -248,11 +260,8 @@ my.ui <- navbarPage("Most Wanted Dashboard",
                                         
                                         #### The Three Widgets ####   
                                         column(3,
-                                               
                                                dropdown,
-                                               
                                                use.boxes,
-                                               
                                                status.boxes),
                                         
                                         
@@ -266,28 +275,28 @@ my.ui <- navbarPage("Most Wanted Dashboard",
                                                  align = "center",
                                                  width = 12
                                                         )
-                                               
                                               )
-                                        )))
+                                        )
+                                      ),
+                    
+                                        tabPanel( "Map",  
+                              titlePanel("Most Wanted Map"),
+                                fluidRow(
+                                  column(3,
+                                         wellPanel(
+                                           h4("Filter"),
+                                           dropdown
+                                         )
+                                         
+                                  ),
+                                  column(9,
+                                         leafletOutput("mostmap", height=500)
+                                           )
+                    
+                    )
+                    )
+            
+        )
+
+
 shinyApp( ui = my.ui, server = my.server )
-```
-
-
-
-### Map Stuff
-
-```{r}
-
-syr.map <- leaflet(data=merged) %>% 
-  
-  addProviderTiles("CartoDB.Positron", tileOptions(minZoom=10, maxZoom=17))  %>%
-  
-  setView(lng=-76.13, lat=43.03, zoom=13) %>%
-  
-  setMaxBounds(lng1=-75, lat1=41, lng2=-77,  lat2=45)
-
-syr.map
-
-addCircles( syr.map, lng = merged$lon, lat = merged$lat, col="orange" )
-
-```
