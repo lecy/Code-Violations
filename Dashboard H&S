@@ -102,6 +102,7 @@ rm (acres.owned, by.owneropen, by.ownerp, by.ownerv, by.prop,
     by.propen, dist.ownerop, dist.ownerp, dist.ownerv, dist.propen,
     only.open, prop.v, props, sqft.owned, total.value)            
  
+ most.wanted <- merged$Owner
 
 ```
 
