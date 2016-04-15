@@ -1,3 +1,4 @@
+
 ### Setup and Data
 
 ```{r}
@@ -7,16 +8,13 @@ library(DT)
 library (dplyr)
 library (leaflet)
 
-data.url <- "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/data/merged.csv"
-data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
-merged <- read.csv (textConnection(data.raw))
+code.violations <- read.csv("https://raw.githubusercontent.com/subartle/orangespot/master/data/code%20violations.csv")
 
-data.url <- "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/data/parcels.csv"
-data.raw <- getURL (data.url, ssl.verifypeer=FALSE)
-parcels <- read.csv (textConnection(data.raw))
+parcels <- read.csv( "https://raw.githubusercontent.com/hectorlca/Code-Violations/master/data/parcels.csv" )
 
+cv <- code.violations[ !( is.na(code.violations$lon) | is.na(code.violations$lat)) , ]
 
-
+merged <- merge( cv, parcels, by.x="Identifier", by.y="SBL" )
 ```
 
 ### Data Table Explorer
@@ -25,6 +23,7 @@ parcels <- read.csv (textConnection(data.raw))
 
 explorer <- select(merged, Complaint.Type, Violation.Date, Comply.By.Date, 
                   Violation.Status, Complaint.Status, Owner, Nhood, LandUse, Address)
+
 
 ### mashed ###
 
@@ -96,12 +95,15 @@ explorer <- select(merged, Complaint.Type, Violation.Date, Comply.By.Date,
       
       prop.mash$`Assessed Value` <- format (prop.mash$`Assessed Value`, digits = 2, scientific = FALSE)
       
+     
+      
 
 rm (acres.owned, by.owneropen, by.ownerp, by.ownerv, by.prop, 
     by.propen, dist.ownerop, dist.ownerp, dist.ownerv, dist.propen,
-    only.open, prop.v, props, sqft.owned, total.value)            
+    only.open, prop.v, props, sqft.owned, total.value)
+
+most.wanted <- merged$Owner
  
- most.wanted <- merged$Owner
 
 ```
 
@@ -115,13 +117,16 @@ my.server <- (function(input, output) {
     
     if (input$status != "All") {
       data <- data[data$Violation.Status == input$status,]
+      
     }
     if (input$use != "All") {
       data <- data[data$LandUse == input$use,]
+     
     }
     
     if (input$complaint != "All") {
           data <- data[data$Complaint.Status == input$complaint,]
+       
     } 
     
     data
@@ -141,7 +146,6 @@ my.server <- (function(input, output) {
       
     } 
     
-    
     data
     
   }))
@@ -150,7 +154,7 @@ my.server <- (function(input, output) {
     
     # build base map on load
     
-    syr.map <- leaflet(data=merged ) %>% 
+    syr.map <- leaflet(data=explorer ) %>% ####
       addProviderTiles("CartoDB.Positron", tileOptions(minZoom=10, maxZoom=17))  %>%
       setView(lng=-76.13, lat=43.03, zoom=13) %>%
       setMaxBounds(lng1=-75, lat1=41, lng2=-77,  lat2=45)
@@ -242,11 +246,11 @@ my.ui <- navbarPage("Most Wanted Dashboard",
                                       fluidRow(
                                         column (3,
                                                 summary.drop),
-                                        column (6,
+                                        column (7,
                                                 
                                                 mainPanel(
                                                  DT::dataTableOutput("summaries"),
-                                                 align = "center",
+                                                 align = "left",
                                                  width = 12
                                                           )
                                       
@@ -289,7 +293,7 @@ my.ui <- navbarPage("Most Wanted Dashboard",
                                          )
                                          
                                   ),
-                                  column(9,
+                                  column(6,
                                          leafletOutput("mostmap", height=500)
                                            )
                     
@@ -300,3 +304,4 @@ my.ui <- navbarPage("Most Wanted Dashboard",
 
 
 shinyApp( ui = my.ui, server = my.server )
+```
