@@ -1,7 +1,7 @@
 
 ### Setup and Data
 
-```{r}
+
 require (RCurl)
 library(shiny)
 library(DT)
@@ -15,11 +15,14 @@ parcels <- read.csv( "https://raw.githubusercontent.com/hectorlca/Code-Violation
 cv <- code.violations[ !( is.na(code.violations$lon) | is.na(code.violations$lat)) , ]
 
 merged <- merge( cv, parcels, by.x="Identifier", by.y="SBL" )
-```
+
+
+
+
 
 ### Data Table Explorer
 
-```{r}
+
 
 explorer <- select(merged, Complaint.Type, Violation.Date, Comply.By.Date, 
                   Violation.Status, Complaint.Status, Owner, Nhood, LandUse, Address)
@@ -105,9 +108,11 @@ rm (acres.owned, by.owneropen, by.ownerp, by.ownerv, by.prop,
 most.wanted <- merged$Owner
  
 
-```
 
-```{r}
+
+
+
+###  SERVER
       
 my.server <- (function(input, output) {
   
@@ -236,8 +241,10 @@ summary.drop <-
 
 
 
-################################################################
-################################################################
+
+
+
+### UI
 
 
 my.ui <- navbarPage("Most Wanted Dashboard",
@@ -304,4 +311,4 @@ my.ui <- navbarPage("Most Wanted Dashboard",
 
 
 shinyApp( ui = my.ui, server = my.server )
-```
+
